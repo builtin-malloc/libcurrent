@@ -1,0 +1,11 @@
+bin/
+obj/
+*.o
+*.a
+*.so
+
+Makefile
+src/config.h
+
+*.swp
+tags

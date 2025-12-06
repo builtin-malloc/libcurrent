@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+
+## =============================================================================
+## == IMPORTS ==================================================================
+## =============================================================================
+
+import os
+import platform
+import sys
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from pathlib import Path
+
+## =============================================================================
+## == CONSTANTS ================================================================
+## =============================================================================
+
+SCRIPTDIR = Path(os.path.dirname(os.path.realpath(__file__)))
+
+INCDIR  = SCRIPTDIR / "include"
+SRCDIR  = SCRIPTDIR / "src"
+OBJDIR  = SCRIPTDIR / "obj"
+BINDIR  = SCRIPTDIR / "bin"
+
+MAKEFILE    = SCRIPTDIR / "Makefile"
+MAKEFILE_IN = SCRIPTDIR / "Makefile.in"
+CONFIGH     = SRCDIR / "config.h"
+CONFIGH_IN  = SRCDIR / "config.h.in"
+
+## =============================================================================
+## == CONFIGURATION ============================================================
+## =============================================================================
+
+def add_paths_to_config(config):
+    config["INCDIR"]   = INCDIR
+    config["SRCDIR"]   = SRCDIR
+    config["OBJDIR"]   = OBJDIR
+    config["BINDIR"]   = BINDIR
+    config["MAKEFILE"] = MAKEFILE
+    config["CONFIG_H"] = CONFIGH
+
+def add_cflags_to_config(config):
+    cflags = []
+
+    if config["STRICT"]:
+        cflags.append("-Werror")
+
+    if config["BUILD"] == "debug":
+        cflags.append("-O0")
+    if config["BUILD"] == "release":
+        cflags.append("-O3")
+        cflags.append("-DNDEBUG")
+
+    if config["PLATFORM"] == "Linux":
+        cflags.append("-DCHESS_PLATFORM_LINUX")
+    if config["PLATFORM"] == "MacOS":
+        cflags.append("-DCHESS_PLATFORM_MACOS")
+
+    config["CFLAGS"] = " ".join(cflags)
+
+def add_ldflags_to_config(config):
+    ldflags = []
+    config["LDFLAGS"] = " ".join(ldflags)
+
+def add_version_to_config(config):
+    # TODO: Read version from git
+    config["VERSION"] = "0.1.0"
+
+def add_platform_to_config(config):
+    os_name = platform.system()
+    if os_name == "Linux":
+        config["PLATFORM"] = "Linux"
+    elif os_name == "Darwin":
+        config["PLATFORM"] = "MacOS"
+    else:
+        print(f"Invalid Platform: {os_name}", file=sys.stderr)
+        sys.exit(1)
+
+
+def configure_file(in_file, out_file, config):
+    content = in_file.read_text()
+    for key, value in config.items():
+        content = content.replace(f"@{key}@", str(value))
+    out_file.write_text(content)
+
+def configure_makefile(config):
+    configure_file(MAKEFILE_IN, MAKEFILE, config)
+
+def configure_config_header(config):
+    configure_file(CONFIGH_IN, CONFIGH, config)
+
+def configure_build_tree(config):
+    src_roots = [SRCDIR]
+    dst_root  = OBJDIR
+
+    for root in src_roots:
+        (dst_root / root.name).mkdir(parents=True, exist_ok=True)
+
+        for path in root.rglob("*"):
+            if path.is_dir():
+                rel = path.relative_to(root)
+                target = dst_root / root.name / rel
+                target.mkdir(parents=True, exist_ok=True)
+
+    BINDIR.mkdir(parents=True, exist_ok=True)
+
+## =============================================================================
+## == MAIN =====================================================================
+## =============================================================================
+
+def parse_args():
+    parser = ArgumentParser(prog="configure", description="Configure the build system",
+                            formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-b", "--build", default="debug", choices=["debug", "release"],
+                        help="The type of build; determines the CFLAGS")
+    parser.add_argument("-s", "--strict", action="store_true",
+                        help="If set, makes compiler warnings appear as errors")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="If set, the compiler commands are printed full")
+
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    config = {
+        "BUILD":   args.build,
+        "STRICT":  args.strict,
+        "VERBOSE": args.verbose,
+    }
+
+    add_version_to_config(config)
+    add_platform_to_config(config)
+    add_paths_to_config(config)
+    add_cflags_to_config(config)
+    add_ldflags_to_config(config)
+
+    print("----------==========[ CONFIGURE ]==========----------")
+    for key, value in config.items():
+        print(f"-- {key}: {value}")
+
+    configure_makefile(config)
+    configure_config_header(config)
+    configure_build_tree(config)
+
+if __name__ == "__main__":
+    main()
+

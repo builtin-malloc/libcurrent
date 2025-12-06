@@ -1,0 +1,121 @@
+## =============================================================================
+## == SETUP ====================================================================
+## =============================================================================
+
+NAME     := current
+VERSION  := @VERSION@
+LIBNAME  := lib$(NAME).so
+
+BUILD    := @BUILD@
+STRICT   := @STRICT@
+VERBOSE  := @VERBOSE@
+PLATFORM := @PLATFORM@
+
+ifeq ($(VERBOSE),False)
+Q		:= @
+ECHO_CC			= @echo "[COMPILE]   $(<F)"
+ECHO_LD			= @echo "[LINK]      $(@F)"
+ECHO_TAGS       = @echo "[TAGS]"
+ECHO_CLEAN      = @echo "[CLEAN]"
+ECHO_DISTCLEAN  = @echo "[DISTCLEAN]"
+endif
+
+## =============================================================================
+## == FILES AND FOLDERS ========================================================
+## =============================================================================
+
+INCDIR := @INCDIR@
+SRCDIR := @SRCDIR@
+OBJDIR := @OBJDIR@
+BINDIR := @BINDIR@
+
+CONFIG_H := @CONFIG_H@
+MAKEFILE := @MAKEFILE@
+
+SRC := $(wildcard $(SRCDIR)/*.c)
+OBJ := $(SRC:$(SRCDIR)/%.c=$(OBJDIR)/src/%.o)
+DEP := $(OBJ:.o=.d)
+LIB := $(BINDIR)/$(LIBNAME)
+
+## =============================================================================
+## == COMPILER =================================================================
+## =============================================================================
+
+CC      ?= cc
+CCLD    ?= $(CC)
+
+CFLAGS  := -c -g -MMD -std=c99 -fPIC -I$(INCDIR) -Wall -Wextra -Wpedantic @CFLAGS@
+LDFLAGS := -L$(BINDIR) @LDFLAGS@
+
+## =============================================================================
+## == COMMANDS =================================================================
+## =============================================================================
+
+RM_F	:= rm -f
+RM_RF	:= rm -rf
+CTAGS_R	:= ctags --languages=C --extras=+q --fields=+iaS -R
+
+## =============================================================================
+## == TARGETS ==================================================================
+## =============================================================================
+
+.PHONY: all
+
+all: build tags
+
+## ========== BUILD
+
+.PHONY: build
+
+build: $(LIB)
+
+$(LIB): $(OBJ)
+	$(ECHO_LD)
+	$(Q)$(CCLD) -o $@ $(filter %.o,$^) $(LDFLAGS) -shared
+
+$(OBJ): $(OBJDIR)/src/%.o: $(SRCDIR)/%.c
+	$(ECHO_CC)
+	$(Q)$(CC) -o $@ $< $(CFLAGS)
+
+-include $(DEP)
+
+## ========== TEST
+
+.PHONY: check
+
+check: $(TESTBIN)
+	$<
+
+## ========== INSTALL
+
+.PHONY: install uninstall
+
+install:
+
+uninstall:
+
+## ========== DEVELOP
+
+.PHONY: tags
+
+tags:
+	$(ECHO_TAGS)
+	$(Q)$(CTAGS_R) $(SRCDIR)
+
+## ========== CLEAN
+
+.PHONY: clean distclean
+
+clean:
+	$(ECHO_CLEAN)
+	$(Q)$(RM_F) $(LIB)
+	$(Q)$(RM_F) $(OBJ)
+	$(Q)$(RM_F) $(DEP)
+
+distclean:
+	$(ECHO_DISTCLEAN)
+	$(Q)$(RM_RF) $(BINDIR)
+	$(Q)$(RM_RF) $(OBJDIR)
+	$(Q)$(RM_F)  $(CONFIG_H)
+	$(Q)$(RM_F)  $(MAKEFILE)
+

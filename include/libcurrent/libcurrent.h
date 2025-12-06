@@ -1,0 +1,3 @@
+#ifndef LIBCURRENT_H
+#define LIBCURRENT_H
+#endif // LIBCURRENT_H
