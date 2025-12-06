@@ -4,7 +4,9 @@
 
 NAME     := current
 VERSION  := @VERSION@
-LIBNAME  := lib$(NAME).so
+
+CORELIBNAME  := lib$(NAME).so
+MAINLIBNAME  := lib$(NAME)-main.a
 
 BUILD    := @BUILD@
 STRICT   := @STRICT@
@@ -15,6 +17,7 @@ ifeq ($(VERBOSE),False)
 Q		:= @
 ECHO_CC			= @echo "[COMPILE]   $(<F)"
 ECHO_LD			= @echo "[LINK]      $(@F)"
+ECHO_AR			= @echo "[ARCHIVE]   $(@F)"
 ECHO_TAGS       = @echo "[TAGS]"
 ECHO_CLEAN      = @echo "[CLEAN]"
 ECHO_DISTCLEAN  = @echo "[DISTCLEAN]"
@@ -32,10 +35,14 @@ BINDIR := @BINDIR@
 CONFIG_H := @CONFIG_H@
 MAKEFILE := @MAKEFILE@
 
-SRC := $(wildcard $(SRCDIR)/*.c)
-OBJ := $(SRC:$(SRCDIR)/%.c=$(OBJDIR)/src/%.o)
-DEP := $(OBJ:.o=.d)
-LIB := $(BINDIR)/$(LIBNAME)
+CORESRC := $(filter-out $(SRCDIR)/main.c,$(wildcard $(SRCDIR)/*.c))
+COREOBJ := $(CORESRC:$(SRCDIR)/%.c=$(OBJDIR)/src/%.o)
+COREDEP := $(COREOBJ:.o=.d)
+CORELIB := $(BINDIR)/$(CORELIBNAME)
+MAINSRC := $(SRCDIR)/main.c
+MAINOBJ := $(MAINSRC:$(SRCDIR)/%.c=$(OBJDIR)/src/%.o)
+MAINDEP := $(MAINOBJ:.o=.d)
+MAINLIB := $(BINDIR)/$(MAINLIBNAME)
 
 ## =============================================================================
 ## == COMPILER =================================================================
@@ -43,9 +50,11 @@ LIB := $(BINDIR)/$(LIBNAME)
 
 CC      ?= cc
 CCLD    ?= $(CC)
+AR      ?= ar
 
 CFLAGS  := -c -g -MMD -std=c99 -fPIC -I$(INCDIR) -Wall -Wextra -Wpedantic @CFLAGS@
 LDFLAGS := -L$(BINDIR) @LDFLAGS@
+ARFLAGS := rcs
 
 ## =============================================================================
 ## == COMMANDS =================================================================
@@ -67,17 +76,22 @@ all: build tags
 
 .PHONY: build
 
-build: $(LIB)
+build: $(CORELIB) $(MAINLIB)
 
-$(LIB): $(OBJ)
+$(CORELIB): $(COREOBJ)
 	$(ECHO_LD)
 	$(Q)$(CCLD) -o $@ $(filter %.o,$^) $(LDFLAGS) -shared
 
-$(OBJ): $(OBJDIR)/src/%.o: $(SRCDIR)/%.c
+$(MAINLIB): $(MAINOBJ)
+	$(ECHO_AR)
+	$(Q)$(AR) $(ARFLAGS) $@ $^
+
+$(COREOBJ) $(MAINOBJ): $(OBJDIR)/src/%.o: $(SRCDIR)/%.c
 	$(ECHO_CC)
 	$(Q)$(CC) -o $@ $< $(CFLAGS)
 
--include $(DEP)
+-include $(COREDEP)
+-include $(MAINDEP)
 
 ## ========== TEST
 
@@ -108,9 +122,12 @@ tags:
 
 clean:
 	$(ECHO_CLEAN)
-	$(Q)$(RM_F) $(LIB)
-	$(Q)$(RM_F) $(OBJ)
-	$(Q)$(RM_F) $(DEP)
+	$(Q)$(RM_F) $(CORELIB)
+	$(Q)$(RM_F) $(COREOBJ)
+	$(Q)$(RM_F) $(COREDEP)
+	$(Q)$(RM_F) $(MAINLIB)
+	$(Q)$(RM_F) $(MAINOBJ)
+	$(Q)$(RM_F) $(MAINDEP)
 
 distclean:
 	$(ECHO_DISTCLEAN)

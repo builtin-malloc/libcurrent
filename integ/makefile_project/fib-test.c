@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-int main(void) {
+void foo(void) {
     assert(fib(0) == 1);
     assert(fib(1) == 1);
     assert(fib(2) == 2);

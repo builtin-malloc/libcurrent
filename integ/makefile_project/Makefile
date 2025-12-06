@@ -9,7 +9,7 @@ CC      ?= cc
 CCLD    ?= $(CC)
 AR      ?= ar
 CFLAGS  += -c -std=c99
-LDFLAGS += -L. -lfib
+LDFLAGS += -L. -lfib -L../../bin -lcurrent -lcurrent-main
 ARFLAGS := rcs
 
 .PHONY: all clean
