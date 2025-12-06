@@ -1,11 +1,20 @@
 #include "fib.h"
 
-#include <assert.h>
+#include "libcurrent/libcurrent.h"
 
-void foo(void) {
-    assert(fib(0) == 1);
-    assert(fib(1) == 1);
-    assert(fib(2) == 2);
-    assert(fib(3) == 3);
-    assert(fib(4) == 5);
+#include <stdio.h>
+
+I_TEST(fib_for_a_few_values) {
+    LIBCURRENT_CURRENT_CONTEXT->statuses[LIBCURRENT_CURRENT_INDEX].num_asserts_run    = 20;
+    LIBCURRENT_CURRENT_CONTEXT->statuses[LIBCURRENT_CURRENT_INDEX].num_asserts_failed = 2;
+}
+
+I_TEST(fib_for_a_few_other_values) {
+    LIBCURRENT_CURRENT_CONTEXT->statuses[LIBCURRENT_CURRENT_INDEX].num_asserts_run    = 10;
+    LIBCURRENT_CURRENT_CONTEXT->statuses[LIBCURRENT_CURRENT_INDEX].num_asserts_failed = 0;
+}
+
+I_TEST(fib_for_a_few_invalid_values) {
+    LIBCURRENT_CURRENT_CONTEXT->statuses[LIBCURRENT_CURRENT_INDEX].num_asserts_run    = 1;
+    LIBCURRENT_CURRENT_CONTEXT->statuses[LIBCURRENT_CURRENT_INDEX].num_asserts_failed = 0;
 }

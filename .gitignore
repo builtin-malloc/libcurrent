@@ -5,7 +5,7 @@ obj/
 *.so
 
 Makefile
-src/config.h
+include/libcurrent/config.h
 
 *.swp
 tags

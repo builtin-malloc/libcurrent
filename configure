@@ -23,8 +23,8 @@ BINDIR  = SCRIPTDIR / "bin"
 
 MAKEFILE    = SCRIPTDIR / "Makefile"
 MAKEFILE_IN = SCRIPTDIR / "Makefile.in"
-CONFIGH     = SRCDIR / "config.h"
-CONFIGH_IN  = SRCDIR / "config.h.in"
+CONFIGH     = INCDIR / "libcurrent" / "config.h"
+CONFIGH_IN  = INCDIR / "libcurrent" / "config.h.in"
 
 ## =============================================================================
 ## == CONFIGURATION ============================================================
@@ -50,11 +50,6 @@ def add_cflags_to_config(config):
         cflags.append("-O3")
         cflags.append("-DNDEBUG")
 
-    if config["PLATFORM"] == "Linux":
-        cflags.append("-DCHESS_PLATFORM_LINUX")
-    if config["PLATFORM"] == "MacOS":
-        cflags.append("-DCHESS_PLATFORM_MACOS")
-
     config["CFLAGS"] = " ".join(cflags)
 
 def add_ldflags_to_config(config):
@@ -68,9 +63,9 @@ def add_version_to_config(config):
 def add_platform_to_config(config):
     os_name = platform.system()
     if os_name == "Linux":
-        config["PLATFORM"] = "Linux"
+        config["PLATFORM"] = "LINUX"
     elif os_name == "Darwin":
-        config["PLATFORM"] = "MacOS"
+        config["PLATFORM"] = "MACOS"
     else:
         print(f"Invalid Platform: {os_name}", file=sys.stderr)
         sys.exit(1)

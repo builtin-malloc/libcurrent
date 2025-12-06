@@ -1,5 +1,5 @@
-LIBSRC  := $(filter-out *test.c,$(wildcard *.c))
-TESTSRC := $(filter     *test.c,$(wildcard *.c))
+LIBSRC  := $(filter-out %test.c,$(wildcard *.c))
+TESTSRC := $(filter     %test.c,$(wildcard *.c))
 LIBOBJ  := $(LIBSRC:.c=.o)
 TESTOBJ := $(TESTSRC:.c=.o)
 LIB     := libfib.a
@@ -8,7 +8,7 @@ TEST    := test-fib
 CC      ?= cc
 CCLD    ?= $(CC)
 AR      ?= ar
-CFLAGS  += -c -std=c99
+CFLAGS  += -c -std=c99 -I../../include
 LDFLAGS += -L. -lfib -L../../bin -lcurrent -lcurrent-main
 ARFLAGS := rcs
 

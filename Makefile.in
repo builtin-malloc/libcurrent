@@ -53,7 +53,7 @@ CCLD    ?= $(CC)
 AR      ?= ar
 
 CFLAGS  := -c -g -MMD -std=c99 -fPIC -I$(INCDIR) -Wall -Wextra -Wpedantic @CFLAGS@
-LDFLAGS := -L$(BINDIR) @LDFLAGS@
+LDFLAGS := -pthread -L$(BINDIR) @LDFLAGS@
 ARFLAGS := rcs
 
 ## =============================================================================
